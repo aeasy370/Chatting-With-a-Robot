@@ -41,7 +41,6 @@ while True:
         c1 = Client()
         input1 =("enter filename: ")
         c1.put(input1)
-        
 
     if client_input == "quit":
         break;
@@ -65,6 +64,3 @@ def read():
 
 read()
     """
-    
-print('Successfully get the file')
-print('connection closed')
