@@ -2,6 +2,9 @@ import socket
 from threading import Thread
 import socketserver
 
+
+
+######This is all fucked, need to create a way to have threads stay open until user closes them. 
 TCP_IP = 'localhost'
 TCP_PORT = 9001
 BUFFER_SIZE = 1024

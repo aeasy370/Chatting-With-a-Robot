@@ -6,12 +6,14 @@ BUFFER_SIZE = 1024
 
 class Client():
 
+    #socket initiation as a client instance
     def __init__(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((TCP_IP, TCP_PORT))
         self.sock = s
         print("new thread " + TCP_IP +":" +str(TCP_PORT))
 
+    ##sends file to client/ closes socket afterwords
     def put(self,inputFile):
         with open(inputFile, 'rb') as file_to_send:
             for data in file_to_send:
@@ -21,6 +23,7 @@ class Client():
         print('Close successful')
         return
 
+    ##recieves files from client/ asks for file maybe, not really sure
     def receive(self):
         with open("received_1_file.txt",'wb') as f:
             while True:
@@ -33,7 +36,7 @@ class Client():
         self.sock.close()
         print('Close successful')
 
-
+##while loop that runs to see what user wants to do 
 while True:
     client_input = input("Send or recieve file: ")
     
