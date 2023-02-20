@@ -8,6 +8,7 @@ import android.media.MediaRecorder
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
@@ -29,20 +30,21 @@ import java.io.File
 
 
 class MainActivity : ComponentActivity() {
-    val context: Context? = null
     var mediaRecorder: MediaRecorder? = null
     var mediaPlayer: MediaPlayer? = null
     private var output: String? = null
     private var outputFile: File? = null
-    fun startRecording(mediaRecorder: MediaRecorder){
+    fun startRecording(mediaRecorder: MediaRecorder, output: String){
+        Log.d("Testing output", output)
         mediaRecorder?.prepare()
         mediaRecorder?.start()
     }
     fun stopRecording(mediaRecorder: MediaRecorder){
         mediaRecorder?.stop()
+        mediaRecorder?.reset()
         mediaRecorder?.release()
     }
-    @RequiresApi(Build.VERSION_CODES.O)
+    @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (ContextCompat.checkSelfPermission(this,
@@ -51,18 +53,19 @@ class MainActivity : ComponentActivity() {
             val permissions = arrayOf(android.Manifest.permission.RECORD_AUDIO, android.Manifest.permission.WRITE_EXTERNAL_STORAGE, android.Manifest.permission.READ_EXTERNAL_STORAGE)
             ActivityCompat.requestPermissions(this, permissions,0)
         }
-        mediaRecorder = MediaRecorder()
-        output = Environment.getExternalStorageDirectory().absolutePath + "/recording.mp3"
+        mediaRecorder = MediaRecorder(applicationContext)
+        output = applicationContext.getExternalFilesDir(null)!!.absolutePath + "/recording.3gp"
         outputFile = File(output)
+        outputFile!!.createNewFile()
         mediaRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC)
-        mediaRecorder?.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+        mediaRecorder?.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
         mediaRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
         mediaRecorder?.setOutputFile(outputFile)
         setContent {
             MyApplicationTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.padding(24.dp), color = MaterialTheme.colors.background) {
-                    SpeechTest(startonClick = {startRecording(mediaRecorder!!)},
+                    SpeechTest(startonClick = {startRecording(mediaRecorder!!, output!!)},
                                stoponClick = {stopRecording(mediaRecorder!!)})
                 }
             }
