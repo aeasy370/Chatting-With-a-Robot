@@ -4,7 +4,7 @@ import whisper
 
 
 UPLOAD_FOLDER = "./servaudiofiles/"
-ALLOWED_EXTENSIONS = {"mp3", "3gp"}
+ALLOWED_EXTENSIONS = {"mp3", "3gp", "mov"}
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
@@ -30,7 +30,7 @@ app.add_url_rule("/<filename>", endpoint="return_text", build_only=True)
 
 @app.route("/<filename>", methods=["GET"])
 def return_text(filename):
-    if ".mp3" not in filename:
+    if ".mp3" not in filename and ".mov" not in filename:
         return ""
     print(f"filename: {filename}")
     whisper_audio = os.path.join(app.config["UPLOAD_FOLDER"], filename)
@@ -41,5 +41,8 @@ def return_text(filename):
 
 
 if __name__ == "__main__":
-    os.makedirs(app.config["UPLOAD_FOLDER"])
+    try:
+        os.makedirs(app.config["UPLOAD_FOLDER"])
+    except FileExistsError:
+        pass
     app.run()
