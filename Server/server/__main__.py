@@ -41,4 +41,5 @@ def return_text(filename):
 
 
 if __name__ == "__main__":
+    os.makedirs(app.config["UPLOAD_FOLDER"])
     app.run()
