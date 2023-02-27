@@ -160,4 +160,4 @@ cython_debug/
 #.idea/
 
 # Current directory where server audio files are stored
-./servaudiofiles
+servaudiofiles
