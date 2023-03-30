@@ -14,9 +14,12 @@ authors = ["matt wyatt <mwyatt14@vols.utk.edu>",
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">=3.9 <3.10"
 flask = "^2.2.3"
 openai-whisper = {git = "https://github.com/openai/whisper.git"}
+noisereduce = "^2.0.1"
+multiprocessing-logging = "^0.3.4"
+python-dotenv = "^1.0.0"
 
 
 [tool.poetry.group.dev.dependencies]
