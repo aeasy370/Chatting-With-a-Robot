@@ -1,48 +1,48 @@
 import os
-from flask import Flask, request
-import whisper
+import logging
+from flask import Flask
+import multiprocessing_logging
+from dotenv import load_dotenv
+from manager import AudioManager
+import blueprints
 
 
-UPLOAD_FOLDER = "./servaudiofiles/"
-ALLOWED_EXTENSIONS = {"mp3", "3gp", "mov"}
-app = Flask(__name__)
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+load_dotenv()
+UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER", "servaudiofiles")
+ALLOWED_EXTENSIONS = os.getenv("ALLOWED_EXTENSIONS", "mp3,3gp,mov")
+MODEL = os.getenv("MODEL", "base.en")
+WORKERS = os.getenv("WORKERS", "1")
+USE_CPU = os.getenv("USE_CPU", "True")
 
 
-@app.route("/", methods=["POST", "GET"])
-def upload_audio():
-    if request.method == "POST":
-        if "file" not in request.files:
-            return "no file"
-        file = request.files["file"]
-        if file.filename == "":
-            return ""
-        if file:
-            filename = file.filename
-            file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
-            return ""
-    if request.method == "GET":
-        return ""
+log = logging.getLogger("server.main")
 
 
-app.add_url_rule("/<filename>", endpoint="return_text", build_only=True)
+def _setup_logging(debug=False):
+    """sets up the server logger
+    """
+    level = logging.DEBUG if debug else logging.INFO
+    ch = logging.StreamHandler()
+    formatter = logging.Formatter('[%(asctime)s %(levelname)s %(name)s] %(message)s')
+    ch.setFormatter(formatter)
+    log = logging.getLogger("server")
+    log.setLevel(level)
+    log.addHandler(ch)
 
+    multiprocessing_logging.install_mp_handler()
 
-@app.route("/<filename>", methods=["GET"])
-def return_text(filename):
-    if ".mp3" not in filename and ".mov" not in filename:
-        return ""
-    print(f"filename: {filename}")
-    whisper_audio = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-    print(f"whisper_audio: {whisper_audio}")
-    model = whisper.load_model("base.en")
-    result = model.transcribe(whisper_audio)
-    return result["text"]
-
+def main():
+    app = Flask(__name__)
+    app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+    app.config["ALLOWED_EXTENSIONS"] = set(ALLOWED_EXTENSIONS.split(","))
+    app.config["MODEL"] = MODEL
+    app.config["WORKERS"] = int(WORKERS)
+    app.config["USE_CPU"] = USE_CPU.lower() in ["true", "yes"]
+    app.config["MANAGER"] = AudioManager(app.config["MODEL"], app.config["UPLOAD_FOLDER"], app.config["WORKERS"], app.config["USE_CPU"])
+    app.register_blueprint(blueprints.main)
+    
+    app.run()
 
 if __name__ == "__main__":
-    try:
-        os.makedirs(app.config["UPLOAD_FOLDER"])
-    except FileExistsError:
-        pass
-    app.run()
+    _setup_logging(debug=True)
+    main()
