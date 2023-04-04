@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "Server"
+version = "0.1.0"
+description = "Chatting with a Robot UTK 2023 Senior Design Project"
+authors = ["matt wyatt <mwyatt14@vols.utk.edu>",
+    "gregory brown <gbrown39@vols.utk.edu>",
+    "mike hughes <mhughe39@vols.utk,edu>",
+    "anthony roman <aroman@vols.utk.edu>",
+    "cole elliott <cellio28@vols.utk.edu>",
+    "ryan seamons <rseamons@vols.utk.edu>",
+    "jay amin <jamin@vols.utk.edu>",
+    "alex esser <aesser@vols.utk.edu>"
+]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.9 <3.10"
+flask = "^2.2.3"
+openai-whisper = {git = "https://github.com/openai/whisper.git"}
+noisereduce = "^2.0.1"
+multiprocessing-logging = "^0.3.4"
+python-dotenv = "^1.0.0"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
