@@ -1,0 +1,30 @@
+{
+    "oee" : 1,
+    "overall equipment effectiveness": 1,
+    "robot" : {
+        "speed" : 2,
+        "power" : 3,
+        "current": 4,
+        "program" : 5,
+        "gripper" : {
+            "open" : 6,
+            "closed" : 7
+        }
+    },
+    "part count" : {
+        "good" : 8,
+        "NG" : 9,
+        "no good" : 9,
+        "Total" : 10
+    },
+    "Machine" : {
+        "Cycle Time" : 11,
+        "CT" : 11,
+        "Power Consumption" : 12,
+        "state" : 15
+    },
+    "Estop" : 13,
+    "emergency stop" : 13,
+    "Push button" : 14,
+    "PB" : 14
+}
