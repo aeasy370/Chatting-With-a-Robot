@@ -19,17 +19,17 @@ log = logging.getLogger("server.main")
 
 
 def _setup_logging(debug=False):
-    """sets up the server logger
-    """
+    """sets up the server logger"""
     level = logging.DEBUG if debug else logging.INFO
     ch = logging.StreamHandler()
-    formatter = logging.Formatter('[%(asctime)s %(levelname)s %(name)s] %(message)s')
+    formatter = logging.Formatter("[%(asctime)s %(levelname)s %(name)s] %(message)s")
     ch.setFormatter(formatter)
     log = logging.getLogger("server")
     log.setLevel(level)
     log.addHandler(ch)
 
     multiprocessing_logging.install_mp_handler()
+
 
 def main():
     app = Flask(__name__)
@@ -38,10 +38,16 @@ def main():
     app.config["MODEL"] = MODEL
     app.config["WORKERS"] = int(WORKERS)
     app.config["USE_CPU"] = USE_CPU.lower() in ["true", "yes"]
-    app.config["MANAGER"] = AudioManager(app.config["MODEL"], app.config["UPLOAD_FOLDER"], app.config["WORKERS"], app.config["USE_CPU"])
+    app.config["MANAGER"] = AudioManager(
+        app.config["MODEL"],
+        app.config["UPLOAD_FOLDER"],
+        app.config["WORKERS"],
+        app.config["USE_CPU"],
+    )
     app.register_blueprint(blueprints.main)
-    
+
     app.run()
+
 
 if __name__ == "__main__":
     _setup_logging(debug=True)

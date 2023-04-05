@@ -12,38 +12,50 @@ from werkzeug.datastructures import FileStorage
 import noisereduce as nr
 
 
-log = logging.getLogger(f'server.manager')
+log = logging.getLogger(f"server.manager")
 
 
 class MessageType(Enum):
+    """represents the different types of messages sent to/from the `AudioManager`.
+    * `STOP` - sent to the server; stops the server
+    * `TRANSCRIBE` - sent to the server; begin transcription of an audio file
+    * `DONE_PROCESSING` - sent from the server; signals that a file is done processing
+    """
+
     STOP = 1
     TRANSCRIBE = 2
     DONE_PROCESSING = 3
 
 
 class Message:
+    """represents a message sent to/from the AudioManager.
+    the variants are listed in the `MessageType` enum.
+    """
+
     def __init__(self, mtype: MessageType, data: Dict[str, str]):
         self.mtype = mtype
         self.data = data
 
     def stop() -> "Message":
+        """constructs a variant of type `STOP`"""
         return Message(MessageType.STOP, {})
 
     def transcribe(filename: str) -> "Message":
-        data = {
-            "name": filename
-        }
+        """constructs a variant of type `TRANSCRIBE`"""
+        data = {"name": filename}
         return Message(MessageType.TRANSCRIBE, data)
-    
+
     def done_processing(filename: str, result: Dict[str, str]) -> "Message":
-        data = {
-            "name": filename,
-            "result": result
-        }
+        """constructs a variant of type `DONE_PROCESSING`"""
+        data = {"name": filename, "result": result}
         return Message(MessageType.DONE_PROCESSING, data)
 
 
 class State:
+    """represents the internal, mutable state of the `AudioManager`.
+    this is separated out into the `State` class to allow copying a handle across multiple threads.
+    """
+
     def __init__(self, model: str, audio_folder: str, mgr: mp.Manager, use_cpu: bool):
         self.model = model
         self.audio_folder = audio_folder
@@ -53,6 +65,11 @@ class State:
 
 
 class AudioManager:
+    """the `AudioManager` class is responsible for processing and storing the resultant text
+    from the audio files passed to it. it spawns multiple worker threads and manages a queue of messages
+    that are handled by the workers.
+    """
+
     def _worker(args: Tuple[int, State]):
         rank = args[0]
         state = args[1]
@@ -93,19 +110,26 @@ class AudioManager:
                 # so we catch those here and ignore the ones that don't matter
                 with warnings.catch_warnings():
                     # we ignore the warn against using CPU because sometimes we want to run this on CPU
-                    warnings.filterwarnings("ignore", message="Performing inference on CPU when CUDA is available")
+                    warnings.filterwarnings(
+                        "ignore",
+                        message="Performing inference on CPU when CUDA is available",
+                    )
                     # this particular warning is a known issue and is safe to completely disregard
-                    warnings.filterwarnings("ignore", message="FP16 is not supported on CPU; using FP32 instead")
+                    warnings.filterwarnings(
+                        "ignore",
+                        message="FP16 is not supported on CPU; using FP32 instead",
+                    )
                     transcription = whisper.transcribe(model, a)
-                
+
                 msg = Message.done_processing(name, transcription)
                 state.result_queue.put(msg)
                 log.info(f"worker transcribed {name}")
             else:
                 log.warn(f"invalid message received in worker {rank}")
-            
 
-    def __init__(self, model: str, audio_folder: str = "servaudiofiles", workers=1, use_cpu=False):
+    def __init__(
+        self, model: str, audio_folder: str = "servaudiofiles", workers=1, use_cpu=False
+    ):
         self.workers = workers
         self.pool = mp.Pool(self.workers)
         log.debug(f"manager initialized pool with {self.workers} workers")
@@ -118,15 +142,20 @@ class AudioManager:
         self.pool.map_async(AudioManager._worker, args)
 
     def save_audio_file(self, name: str, f: FileStorage):
+        """save an audio file to the manager's directory"""
         f.save(os.path.join(self.state.audio_folder, name))
 
     def request_transcription(self, filename):
+        """begin transcription of an audio file. this method will not transcribe an audio file that has already been processed"""
         if self.results.get(filename):
             return
-        
+
         self.state.job_queue.put(Message.transcribe(filename))
-    
+
     def get_transcription(self, name: str, timeout=1):
+        """get the transcription for an audio file. this method blocks for `timeout` seconds.
+        if the file has already been processed, then this method will return the text immediately.
+        """
         self.request_transcription(name)
         while True:
             # empty the queue every time we call get_transcription and store the result
@@ -136,16 +165,16 @@ class AudioManager:
                     self.results[res.data["name"]] = res.data["result"]
             except Empty:
                 break
-        
+
         # if we happen to already have the result we want, return it
         if self.results.get(name):
             return self.results.get(name)
-        
+
         start_time = time.time()
         while True:
             if timeout != None and time.time() - start_time > timeout:
                 return None
-            
+
             try:
                 # poll the queue every second for the item we're looking for
                 res: Message = self.state.result_queue.get(block=True, timeout=1)
@@ -157,8 +186,9 @@ class AudioManager:
                         return res.data["result"]
             except Empty:
                 continue
-    
+
     def stop_workers(self):
+        """stop all workers"""
         for _ in range(0, self.workers):
             # put a stop message for every single worker
             self.state.job_queue.put(Message.stop())
