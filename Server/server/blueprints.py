@@ -7,6 +7,7 @@ log = logging.getLogger(f"server.handler")
 main = Blueprint("main", __name__)
 main.add_url_rule("/<filename>", endpoint="return_text", build_only=True)
 
+
 @main.route("/", methods=["POST", "GET"])
 def upload_audio():
     if request.method == "POST":
@@ -23,11 +24,14 @@ def upload_audio():
     if request.method == "GET":
         return ""
 
+
 @main.route("/<filename>", methods=["GET"])
 def return_text(filename):
-    if not any(map(lambda ext: ext in filename, current_app.config["ALLOWED_EXTENSIONS"])):
+    if not any(
+        map(lambda ext: ext in filename, current_app.config["ALLOWED_EXTENSIONS"])
+    ):
         return ""
-    
+
     mgr: AudioManager = current_app.config["MANAGER"]
     log.debug(f"getting transcription for {filename}")
     return mgr.get_transcription(filename, timeout=30)
