@@ -9,7 +9,7 @@ import blueprints
 
 load_dotenv()
 UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER", "servaudiofiles")
-ALLOWED_EXTENSIONS = os.getenv("ALLOWED_EXTENSIONS", "mp3,3gp,mov")
+ALLOWED_EXTENSIONS = os.getenv("ALLOWED_EXTENSIONS", "mp3,3gp,mov,m4a")
 MODEL = os.getenv("MODEL", "base.en")
 WORKERS = os.getenv("WORKERS", "1")
 USE_CPU = os.getenv("USE_CPU", "True")
