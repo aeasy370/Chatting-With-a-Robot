@@ -11,9 +11,13 @@ main.add_url_rule("/<filename>", endpoint="return_text", build_only=True)
 @main.route("/", methods=["POST", "GET"])
 def upload_audio():
     if request.method == "POST":
-        if "file" not in request.files:
+        if "file" in request.files:
+            file = request.files["file"]
+        elif len(request.form) > 0 and "file" == request.form[0][0]:
+            file = request.form[0][1]
+        else:
             return "no file"
-        file = request.files["file"]
+    
         if file.filename == "":
             return ""
         if file:
@@ -30,6 +34,7 @@ def return_text(filename):
     if not any(
         map(lambda ext: ext in filename, current_app.config["ALLOWED_EXTENSIONS"])
     ):
+        log.debug(f"eliding recording for {filename}")
         return ""
 
     mgr: AudioManager = current_app.config["MANAGER"]
