@@ -2,10 +2,11 @@ import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import { Audio } from 'expo-av';
 import { Button, StyleSheet, Text, View, TextInput } from 'react-native';
-import * as Sharing from 'expo-sharing';
+//import * as Sharing from 'expo-sharing';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import uuid from 'react-native-uuid';
 
 export default function App() {
   const [recording, setRecording] = React.useState();
@@ -44,7 +45,8 @@ export default function App() {
     updatedRecordings.push({
       sound: sound,
       duration: getDurationFormatted(status.durationMillis),
-      file: recording.getURI()
+      file: recording.getURI(),
+      id: uuid.v4()
     });
 
     setRecordings(updatedRecordings);
@@ -59,12 +61,56 @@ export default function App() {
   }
 
   function getRecordingLines() {
+    
+    const uploadFile = async(file, id) => {
+      console.log("Uploading file...");
+      const servername = JSON.parse(await AsyncStorage.getItem('Server'));
+      const portname = JSON.parse(await AsyncStorage.getItem('Port'));
+      const url = `http://${servername}:${portname}`
+      const request = new XMLHttpRequest();
+      const formData = new FormData();
+      console.log(url);
+      //alert(url);
+      request.open("POST", url, true);
+      request.onreadystatechange = () => {
+        if (request.readyState === 4 && request.status === 200) {
+          console.log(request.responseText);
+        }
+      };
+
+      var recordingData  = {
+        uri: file,
+        type: 'audio/mp4',
+        name: `${id}.m4a`
+      }
+      console.log(recordingData);
+      formData.append("file", recordingData);
+      request.send(formData);
+    };
+
+    const getText = async(id) => {
+      const servername = JSON.parse(await AsyncStorage.getItem('Server'));
+      const portname = JSON.parse(await AsyncStorage.getItem('Port'));
+      const url = `http://${servername}:${portname}/${id}.m4a`
+      const request = new XMLHttpRequest();
+      request.open("GET", url, true);
+      request.onreadystatechange = () => {
+        if (request.readyState === 4 && request.status === 200) {
+          console.log(request.responseText);
+          alert(JSON.parse(request.responseText).text);
+        }
+      };
+      request.send();
+
+    }
+
     return recordings.map((recordingLine, index) => {
       return (
         <View key={index} style={styles.row}>
           <Text style={styles.fill}>Recording {index + 1} - {recordingLine.duration}</Text>
           <Button style={styles.button} onPress={() => recordingLine.sound.replayAsync()} title="Play"></Button>
-          <Button style={styles.button} onPress={() => Sharing.shareAsync(recordingLine.file)} title="Share"></Button>
+          <Button style={styles.button} onPress={() => uploadFile(recordingLine.file, recordingLine.id)} title="Send to Server"></Button>
+          <Button style={styles.button} onPress={() => getText(recordingLine.id)} title="Receive From Server"></Button>
         </View>
       );
     });
@@ -137,7 +183,7 @@ export default function App() {
         style={styles.input}
         onChangeText={onChangeNumber}
         value={number}
-        placeholder="Port"
+        placeholder="5000"
         keyboardType="numeric"
       />
       <Button
@@ -165,9 +211,6 @@ export default function App() {
             onPress={recording ? stopRecording : startRecording}
           />
           {getRecordingLines()}
-          <Button
-            title="Send to Server"
-          />
           <Button
           title="Go to Settings"
           onPress={() => navigation.navigate('Settings')}
