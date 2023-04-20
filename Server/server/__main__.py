@@ -13,6 +13,7 @@ ALLOWED_EXTENSIONS = os.getenv("ALLOWED_EXTENSIONS", "mp3,3gp,mov,m4a")
 MODEL = os.getenv("MODEL", "base.en")
 WORKERS = os.getenv("WORKERS", "1")
 USE_CPU = os.getenv("USE_CPU", "True")
+PORT = os.getenv("PORT", "5000")
 
 
 log = logging.getLogger("server.main")
@@ -44,9 +45,10 @@ def main():
         app.config["WORKERS"],
         app.config["USE_CPU"],
     )
+    app.config["PORT"] = PORT
     app.register_blueprint(blueprints.main)
 
-    app.run()
+    app.run(port=app.config["PORT"])
 
 
 if __name__ == "__main__":
