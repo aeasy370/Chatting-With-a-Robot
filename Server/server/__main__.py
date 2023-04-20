@@ -1,7 +1,7 @@
 import os
 import logging
 from flask import Flask
-import multiprocessing_logging
+import multiprocessing as mp
 from dotenv import load_dotenv
 from manager import AudioManager
 import blueprints
@@ -29,7 +29,9 @@ def _setup_logging(debug=False):
     log.setLevel(level)
     log.addHandler(ch)
 
-    multiprocessing_logging.install_mp_handler()
+    mplog = mp.get_logger()
+    mplog.setLevel(level)
+    mplog.addHandler(ch)
 
 
 def main():

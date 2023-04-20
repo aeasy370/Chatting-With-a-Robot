@@ -1,7 +1,6 @@
 import os
 import time
 import multiprocessing as mp
-import logging
 import warnings
 from typing import Dict, Tuple
 from enum import Enum
@@ -12,7 +11,7 @@ from werkzeug.datastructures import FileStorage
 import noisereduce as nr
 
 
-log = logging.getLogger(f"server.manager")
+log = mp.get_logger()
 
 
 class MessageType(Enum):

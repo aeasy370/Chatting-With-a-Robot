@@ -14,12 +14,7 @@ authors = ["matt wyatt <mwyatt14@vols.utk.edu>",
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.9 <3.10"
-flask = "^2.2.3"
-openai-whisper = "^20230314"
-noisereduce = "^2.0.1"
-multiprocessing-logging = "^0.3.4"
-python-dotenv = "^1.0.0"
+python = "3.10.9"
 
 
 [tool.poetry.group.dev.dependencies]
