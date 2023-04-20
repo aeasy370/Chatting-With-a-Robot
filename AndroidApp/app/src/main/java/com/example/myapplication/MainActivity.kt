@@ -1,19 +1,16 @@
 package com.example.myapplication
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
 import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
@@ -26,14 +23,29 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.myapplication.ui.theme.MyApplicationTheme
-import java.io.File
+import okhttp3.MediaType
+import okhttp3.RequestBody
+import okhttp3.ResponseBody
+import org.json.JSONObject
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import retrofit2.Retrofit
+import retrofit2.http.Body
+import retrofit2.http.POST
+import java.io.*
 
 
+
+interface AudioService{
+    @POST("/")
+    suspend fun sendAudio(@Body recordingData: RequestBody): ResponseBody
+}
 class MainActivity : ComponentActivity() {
     var mediaRecorder: MediaRecorder? = null
     var mediaPlayer: MediaPlayer? = null
     private var output: String? = null
     private var outputFile: File? = null
+
     fun startRecording(mediaRecorder: MediaRecorder, output: String){
         Log.d("Testing output", output)
         mediaRecorder?.prepare()
@@ -41,16 +53,30 @@ class MainActivity : ComponentActivity() {
     }
     fun stopRecording(mediaRecorder: MediaRecorder){
         mediaRecorder?.stop()
-        mediaRecorder?.reset()
-        mediaRecorder?.release()
+
     }
+    @RequiresApi(Build.VERSION_CODES.Q)
+    fun sendRecording(recordingFile: File){
+        val retrofitBuilder = Retrofit.Builder()
+            .baseUrl("https://google.com")
+            .build()
+        //val recordingRequestBody = RequestBody.create(MediaType.parse("audio/*"),recordingFile)
+        val testString = "Hello World"
+        val recordingRequestBody = RequestBody.create(MediaType.parse("text"),testString)
+        val recordingService = retrofitBuilder.create(AudioService::class.java)
+        runBlocking {
+            launch { recordingService.sendAudio(recordingRequestBody) }
+        }
+
+    }
+
     @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            val permissions = arrayOf(android.Manifest.permission.RECORD_AUDIO, android.Manifest.permission.WRITE_EXTERNAL_STORAGE, android.Manifest.permission.READ_EXTERNAL_STORAGE)
+            val permissions = arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)
             ActivityCompat.requestPermissions(this, permissions,0)
         }
         mediaRecorder = MediaRecorder(applicationContext)
@@ -66,7 +92,9 @@ class MainActivity : ComponentActivity() {
                 // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.padding(24.dp), color = MaterialTheme.colors.background) {
                     SpeechTest(startonClick = {startRecording(mediaRecorder!!, output!!)},
-                               stoponClick = {stopRecording(mediaRecorder!!)})
+                        stoponClick = {stopRecording(mediaRecorder!!)},
+                        sendOnClick = {sendRecording(outputFile!!)}
+                    )
                 }
             }
         }
@@ -74,7 +102,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun SpeechTest(startonClick: () -> Unit, stoponClick: () -> Unit) {
+fun SpeechTest(startonClick: () -> Unit, stoponClick: () -> Unit, sendOnClick: () -> Unit) {
 Column() {
     Button(onClick = startonClick) {
         Text("Start Recording")
@@ -84,6 +112,9 @@ Column() {
         Text("Stop Recording")
 
     }
+    Button(onClick = sendOnClick){
+        Text("Send Recording to Server")
+    }
 }
 }
 
@@ -91,6 +122,6 @@ Column() {
 @Composable
 fun DefaultPreview() {
     MyApplicationTheme {
-        SpeechTest({},{})
+        SpeechTest({},{},{})
     }
 }
