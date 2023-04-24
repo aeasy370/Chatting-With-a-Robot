@@ -50,7 +50,7 @@ def main():
     app.config["PORT"] = PORT
     app.register_blueprint(blueprints.main)
 
-    app.run(port=app.config["PORT"])
+    app.run(host="0.0.0.0", port=app.config["PORT"])
 
 
 if __name__ == "__main__":

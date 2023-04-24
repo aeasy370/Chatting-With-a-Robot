@@ -61,7 +61,6 @@ regex==2023.3.23
 requests==2.28.2
 scikit-learn==1.2.2
 scipy==1.10.1
--e git+ssh://git@github.com/aeasy370/Chatting-With-a-Robot.git@2a8691b361baa4004edc32f07949450e1d1cb28a#egg=server&subdirectory=Server
 six==1.16.0
 soundfile==0.12.1
 soxr==0.3.5
