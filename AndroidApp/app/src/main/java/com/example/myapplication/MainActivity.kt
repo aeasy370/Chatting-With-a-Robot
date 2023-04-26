@@ -23,22 +23,23 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.myapplication.ui.theme.MyApplicationTheme
-import okhttp3.MediaType
-import okhttp3.RequestBody
-import okhttp3.ResponseBody
-import org.json.JSONObject
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import okhttp3.*
 import retrofit2.Retrofit
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 import java.io.*
-
+import java.util.concurrent.TimeUnit
 
 
 interface AudioService{
     @POST("/")
-    suspend fun sendAudio(@Body recordingData: RequestBody): ResponseBody
+    suspend fun sendAudio(@Body recordingData: MultipartBody): ResponseBody
+    @GET("/{recordingname}")
+    suspend fun recieveData(@Path("recordingname") recordingName: String): ResponseBody
 }
 class MainActivity : ComponentActivity() {
     var mediaRecorder: MediaRecorder? = null
@@ -53,20 +54,32 @@ class MainActivity : ComponentActivity() {
     }
     fun stopRecording(mediaRecorder: MediaRecorder){
         mediaRecorder?.stop()
+        mediaRecorder?.release()
+        mediaRecorder?.reset()
 
     }
     @RequiresApi(Build.VERSION_CODES.Q)
     fun sendRecording(recordingFile: File){
-        val retrofitBuilder = Retrofit.Builder()
-            .baseUrl("https://google.com")
+        val okHttpClient = OkHttpClient.Builder()
+            .readTimeout(5, TimeUnit.MINUTES)
+            .connectTimeout(5, TimeUnit.MINUTES)
             .build()
-        //val recordingRequestBody = RequestBody.create(MediaType.parse("audio/*"),recordingFile)
-        val testString = "Hello World"
-        val recordingRequestBody = RequestBody.create(MediaType.parse("text"),testString)
+        val retrofitBuilder = Retrofit.Builder()
+            .baseUrl("http://10.131.212.122:5301")
+            .client(okHttpClient)
+            .build()
+        val recordingRequestBody = MultipartBody.Builder().setType(MultipartBody.FORM)
+            .addFormDataPart("file", recordingFile.name,RequestBody.create(MediaType.parse("audio/*"),recordingFile))
+            .build()
+//        val testString = "Hello World"
+//        val recordingRequestBody = RequestBody.create(MediaType.parse("text"),testString)
         val recordingService = retrofitBuilder.create(AudioService::class.java)
+        //val filePartBody = MultipartBody.Part.createFormData("file", recordingFile.name, recordingFile.asRequestBody())
         runBlocking {
-            launch { recordingService.sendAudio(recordingRequestBody) }
+            launch { recordingService.sendAudio(recordingRequestBody)
+            recordingService.recieveData(recordingFile.name)}
         }
+
 
     }
 
@@ -90,7 +103,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyApplicationTheme {
                 // A surface container using the 'background' color from the theme
-                Surface(modifier = Modifier.padding(24.dp), color = MaterialTheme.colors.background) {
+                Surface(modifier = Modifier, color = MaterialTheme.colors.background) {
                     SpeechTest(startonClick = {startRecording(mediaRecorder!!, output!!)},
                         stoponClick = {stopRecording(mediaRecorder!!)},
                         sendOnClick = {sendRecording(outputFile!!)}
