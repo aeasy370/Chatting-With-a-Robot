@@ -1,90 +1,95 @@
-from typing import List, Tuple
+from typing import List, Optional
 from enum import Enum
 import json
 import nltk
 from nltk.tokenize import word_tokenize
 
 
+nltk.download("punkt")
+nltk.download("averaged_perceptron_tagger")
+
+
 def get_words(command: str) -> List[str]:
-    '''
-    takes a string as an argument, most likely a command to do something
+    """takes a string as an argument, most likely a command to do something
     returns a list of every word in the command argument
-    '''
-    return word_tokenize(command)
+    """
+    t = list(map(str.lower, word_tokenize(command)))
+    return t
 
 def get_all_nouns(command: str) -> List[str]:
-    '''
-    takes a string as an argument, most likely a command to do something
+    """takes a string as an argument, most likely a command to do something
     returns a list of every noun in the command argument
-    '''
-    return list(filter(lambda x: x[1] == "NN", get_words(command)))
+    """
+    x = nltk.pos_tag(get_words(command))
+    t = list(filter(lambda x: x[1] == "NN" or x[1] == "JJ", x))
+    return t
 
 def get_keywords(keywords: List[str], command: str) -> List[str]:
-	'''
-	1st argument: list of keywords that you want to be seen
+	"""1st argument: list of keywords that you want to be seen
 	2nd argument: command you want to take the keywords from
 	returns a list of the keywords seen in the command argument
-	'''
+	"""
 	nouns = get_all_nouns(command)
-	return list(filter(lambda n: n in keywords, nouns))
+	return list(map(lambda n: n[0], filter(lambda n: n[0] in keywords, nouns)))
 
-def process_keyword_file(filename: str) -> List[str]:
-	keyword_dict = json.load(filename)
-	def build_keywords(d):
+
+def read_keyword_file(filename: str) -> dict[str, str]:
+	"""reads a keyword tree
+	"""
+	keyword_dict = json.load(open(filename))
+	return keyword_dict
+
+
+def process_keyword_file(tree: dict[str, str]) -> List[str]:
+	"""builds a list of keywords based on a keyword file
+	"""
+	def build_keywords(d: dict):
+		if type(d) != dict:
+			return []
 		keys = []
 		for key in d.keys():
 			keys.append(key)
 			if type(d[key]) == dict:
 				keys += build_keywords(d[key])
-	
-	return build_keywords(keyword_dict)
-
-class InvalidIntent(Exception):
-	def __init__(self, verb=None, obj=None):
-		self.verb = verb
-		self.obj = obj
-		if verb:
-			super().__init__(f"invalid verb '{verb}'")
-		elif obj:
-			super().__init__(f"invalid intent object '{obj}'")
-		else:
-			super().__init__(f"invald intent (no further information)")
-	
-class IntentVerb(Enum):
-	GET = 0
-
-class IntentObject(Enum):
-	OEE = 0
-	ROBOT = 1
-	SPEED = 2
-	POWER = 3
-	CURRENT = 4
-	PROGRAM = 5
-	GRIPPER = 6
-	OPEN = 7
-	CLOSED = 8
-	PART_COUNT = 9
-	GOOD = 10
-	NO_GOOD = 11
-	TOTAL = 12
-	MACHINE = 13
-	CYCLE_TIME = 14
-	POWER_CONSUMPTION = 15
-	STATE = 16
-	ESTOP = 17
-	PUSH_BUTTON = 18
-
-class Intent:
-	def __init__(self, verb: str, obj: str):
-		if verb.lower() != "get":
-			raise InvalidIntent(verb=verb)
 		
-		self.verb = IntentVerb.GET
-		self.obj = IntentObject.OEE # just for now
-		# TODO: map objs to variants of IntentObject
+		return keys
+	
+	return build_keywords(tree)
 
 
-def get_text_intent(keywords: List[str], command: str) -> Intent:
-	# TODO: make this smarter
-	important_keywords = get_keywords(keywords, command)
-	return Intent("get", important_keywords[0])
+def traverse_keyword_tree(tree: dict[str, str], keyword_seq: List[str]) -> Optional[str]:
+	"""traverses a keyword tree in order of keys from `keyword_seq` to get the leaf
+	returns `None` if the keyword sequence did not produce a valid diagnostic name
+	"""
+	cur = tree
+	if keyword_seq == []:
+		return None
+
+	for k in keyword_seq:
+		if type(cur) == str:
+			return cur
+		x = cur.get(k)
+		if not x:
+			return None
+		cur = x
+	
+	return cur
+
+
+def get_diagnostic_from_transcription(tree: dict[str, str], transcript: str) -> Optional[str]:
+	"""parse a diagnostic name from a transcription
+	"""
+	all_keywords = process_keyword_file(tree)
+	print(all_keywords)
+	seq = get_keywords(all_keywords, transcript)
+	print(transcript)
+	print(seq)
+	return traverse_keyword_tree(tree, seq)
+
+
+if __name__ == "__main__":
+	tree = read_keyword_file("../diagnostic.json")
+	print(tree)
+	x = process_keyword_file(tree)
+	print(x)
+	print(get_diagnostic_from_transcription(tree, "get the robot gripper open"))

@@ -1,9 +1,11 @@
 import logging
 from flask import Blueprint, request, current_app
 from manager import AudioManager
+from processing import read_keyword_file, get_diagnostic_from_transcription
 
 
 log = logging.getLogger(f"server.handler")
+keywords = read_keyword_file("../diagnostic.json")
 main = Blueprint("main", __name__)
 main.add_url_rule("/<filename>", endpoint="return_text", build_only=True)
 
@@ -39,4 +41,10 @@ def return_text(filename):
 
     mgr: AudioManager = current_app.config["MANAGER"]
     log.debug(f"getting transcription for {filename}")
-    return mgr.get_transcription(filename, timeout=30)
+    transcript = mgr.get_transcription(filename, timeout=30)
+    if transcript:
+        x = get_diagnostic_from_transcription(keywords, transcript["text"])
+        if x:
+            return x
+        return "failure to get diagnostic", 500
+    return "failure to get transcript", 500
