@@ -5,10 +5,6 @@ import nltk
 from nltk.tokenize import word_tokenize
 
 
-nltk.download("punkt")
-nltk.download("averaged_perceptron_tagger")
-
-
 def get_words(command: str) -> List[str]:
     """takes a string as an argument, most likely a command to do something
     returns a list of every word in the command argument

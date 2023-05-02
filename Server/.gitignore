@@ -164,3 +164,6 @@ servaudiofiles
 
 # vscode stuff
 .vscode
+
+# prebuilt docker image
+image.tar
