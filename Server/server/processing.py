@@ -88,7 +88,7 @@ def get_diagnostic_from_transcription(tree: dict[str, str], transcript: str) -> 
 
 
 if __name__ == "__main__":
-	tree = read_keyword_file("../diagnostic.json")
+	tree = read_keyword_file("diagnostic.json")
 	print(tree)
 	x = process_keyword_file(tree)
 	print(x)
