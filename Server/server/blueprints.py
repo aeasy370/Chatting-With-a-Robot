@@ -2,6 +2,7 @@ import logging
 from flask import Blueprint, request, current_app
 from manager import AudioManager
 from processing import read_keyword_file, get_diagnostic_from_transcription
+from robocomm import RoboComm
 
 
 log = logging.getLogger(f"server.handler")
@@ -42,9 +43,20 @@ def return_text(filename):
     mgr: AudioManager = current_app.config["MANAGER"]
     log.debug(f"getting transcription for {filename}")
     transcript = mgr.get_transcription(filename, timeout=30)
-    if transcript:
-        x = get_diagnostic_from_transcription(keywords, transcript["text"])
-        if x:
-            return x
+    if transcript is None:
+        return "failure to transcribe", 500
+
+    diagnostic = get_diagnostic_from_transcription(keywords, transcript["text"])
+    if diagnostic is None:
         return "failure to get diagnostic", 500
-    return "failure to get transcript", 500
+        
+    # at this point, we know that transcript and diagnostic are valid
+    # so let's check if we have a CONNECTION in the app and if so, attempt to get some data from the robot!
+    conn: RoboComm = current_app.config["CONNECTION"]
+    if conn is None:
+        return diagnostic, 200
+    
+    # now we know we have a connection, so send the data to the robot
+    conn.send(diagnostic)
+    # and receive
+    return str(conn.receive()), 200

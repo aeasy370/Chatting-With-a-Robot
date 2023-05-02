@@ -5,9 +5,13 @@ import multiprocessing as mp
 from dotenv import load_dotenv
 from manager import AudioManager
 import blueprints
+from robocomm import RoboComm
 
 
 load_dotenv()
+# if PLC_HOST is unset, then the server will not attempt to communicate with any robots/plcs
+PLC_HOST = os.getenv("PLC_HOST")
+PLC_PORT = os.getenv("PLC_PORT", "9999")
 UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER", "servaudiofiles")
 ALLOWED_EXTENSIONS = os.getenv("ALLOWED_EXTENSIONS", "mp3,3gp,mov,m4a")
 MODEL = os.getenv("MODEL", "base.en")
@@ -48,6 +52,12 @@ def main():
         app.config["USE_CPU"],
     )
     app.config["PORT"] = PORT
+    app.config["PLC_HOST"] = PLC_HOST
+    app.config["PLC_PORT"] = PLC_PORT
+    if PLC_HOST is not None:
+        app.config["CONNECTION"] = RoboComm(PLC_HOST, PLC_PORT)
+    else:
+        app.config["CONNECTION"] = None
     app.register_blueprint(blueprints.main)
 
     app.run(host="0.0.0.0", port=app.config["PORT"])
