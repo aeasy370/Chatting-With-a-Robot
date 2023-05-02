@@ -6,7 +6,7 @@ from robocomm import RoboComm
 
 
 log = logging.getLogger(f"server.handler")
-keywords = read_keyword_file("../diagnostic.json")
+keywords = read_keyword_file("diagnostic.json")
 main = Blueprint("main", __name__)
 main.add_url_rule("/<filename>", endpoint="return_text", build_only=True)
 

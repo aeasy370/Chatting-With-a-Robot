@@ -1,0 +1,39 @@
+{
+	"oee": "OEEREQUEST",
+	"robot": {
+		"speed": "RBSpeed",
+		"power": "RobotPower",
+		"current": "RobotCurrent",
+		"program": "RobotActiveProg",
+		"running": "RobotActiveProg",
+		"gripper": {
+			"open": "RobotGripStatus",
+			"closed": "RobotGripStatus",
+			"gripper": "RobotGripStatus"
+		}
+	},
+	"part count":{
+		"good": "PLC_GoodCount",
+		"ng": "PLC_NGCount",
+		"no good": "PLC_NGCount",
+		"total": "PLC_TotalPartCount"
+	},
+	"machine":{
+		"cycle": "PLC_MC_CT",
+		"time": "PLC_MC_CT",
+		"cycle time": "PLC_MC_CT",
+		"power": "PLC_MC_Watts",
+		"Consumption": "PLC_MC_Watts",
+		"power consumption": "PLC_MC_Watts",
+		"state": "PLC_MACHINE_STATE"
+	},
+	"estop": "PLC_MC_EstopPB_Active",
+	"emergency": {
+		"stop": "PLC_MC_EstopPB_Active",
+		"pb": "PLC_MC_EstopPB_Active",
+		"pushbutton": "PLC_MC_EstopPB_Active",
+		"push": {
+			"button": "PLC_MC_EstopPB_Active"
+		}
+	}
+}
