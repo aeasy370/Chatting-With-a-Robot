@@ -97,7 +97,7 @@ export default function App() {
       request.onreadystatechange = () => {
         if (request.readyState === 4 && request.status === 200) {
           console.log(request.responseText);
-          alert(JSON.parse(request.responseText).text);
+          alert(request.responseText);  
         }
       };
       request.send();
