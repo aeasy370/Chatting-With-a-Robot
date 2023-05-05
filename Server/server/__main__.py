@@ -18,6 +18,7 @@ MODEL = os.getenv("MODEL", "base.en")
 WORKERS = os.getenv("WORKERS", "1")
 USE_CPU = os.getenv("USE_CPU", "True")
 PORT = os.getenv("PORT", "5000")
+DEMO_MODE = os.getenv("DEMO_MODE", "False")
 
 
 log = logging.getLogger("server.main")
@@ -45,6 +46,7 @@ def main():
     app.config["MODEL"] = MODEL
     app.config["WORKERS"] = int(WORKERS)
     app.config["USE_CPU"] = USE_CPU.lower() in ["true", "yes"]
+    app.config["DEMO_MODE"] = DEMO_MODE.lower() in ["true", "yes"]
     app.config["MANAGER"] = AudioManager(
         app.config["MODEL"],
         app.config["UPLOAD_FOLDER"],
@@ -55,7 +57,7 @@ def main():
     app.config["PLC_HOST"] = PLC_HOST
     app.config["PLC_PORT"] = PLC_PORT
     if PLC_HOST is not None:
-        app.config["CONNECTION"] = RoboComm(PLC_HOST, PLC_PORT)
+        app.config["CONNECTION"] = RoboComm(PLC_HOST, PLC_PORT, app.config["DEMO_MODE"])
     else:
         app.config["CONNECTION"] = None
     app.register_blueprint(blueprints.main)

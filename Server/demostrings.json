@@ -1,0 +1,15 @@
+{
+    "OEEREQUEST": "The OEE is 1.",
+    "RBSpeed": "The robot speed is 400mph.",
+    "RobotPower": "The robot power is a bunch.",
+    "RobotCurrent": "The robot current is 50 amps.",
+    "RobotActiveProg": "The active program on the robot is Demo Mode.",
+    "RobotGripStatus": "The robot gripper is open.",
+    "PLC_GoodCount": "There are 30 good parts.",
+    "PLC_NGCount": "There are 2 bad parts.",
+    "PLC_TotalPartCount": "There are 32 total parts.",
+    "PLC_MC_CT": "The machine cycle time is 24ms.",
+    "PLC_MC_Watts": "The machine power is 500 Watts.",
+    "PLC_MACHINE_STATE": "The machine state is Demo Mode.",
+    "PLC_MC_EstopPB_Active": "The E-Stop button is not active"
+}
