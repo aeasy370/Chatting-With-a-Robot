@@ -12,11 +12,19 @@
 			"gripper": "RobotGripStatus"
 		}
 	},
-	"part count":{
-		"good": "PLC_GoodCount",
-		"ng": "PLC_NGCount",
-		"no good": "PLC_NGCount",
-		"total": "PLC_TotalPartCount"
+	"total": {
+		"part": {
+			"count": "PLC_TotalPartCount"
+		}
+	},
+	"part": {
+		"count": {
+			"good": "PLC_GoodCount",
+			"NG": "PLC_NGCount",
+			"no good": "PLC_NGCount",
+			"bad": "PLC_NGCount",
+			"total": "PLC_TotalPartCount"
+		}
 	},
 	"machine":{
 		"cycle": "PLC_MC_CT",
