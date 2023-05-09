@@ -1,6 +1,7 @@
 import os
 import time
-import multiprocessing as mp
+import logging
+import multiprocessing.dummy as mp
 import warnings
 from typing import Dict, Tuple
 from enum import Enum
@@ -11,7 +12,7 @@ from werkzeug.datastructures import FileStorage
 import noisereduce as nr
 
 
-log = mp.get_logger()
+log = logging.getLogger("server.manager")
 
 
 class MessageType(Enum):
@@ -127,7 +128,7 @@ class AudioManager:
                 log.warn(f"invalid message received in worker {rank}")
 
     def __init__(
-        self, model: str, audio_folder: str = "servaudiofiles", workers=1, use_cpu=False
+            self, model: str, audio_folder: str = "servaudiofiles", workers=1, use_cpu=False
     ):
         self.workers = workers
         self.pool = mp.Pool(self.workers)
@@ -140,9 +141,9 @@ class AudioManager:
         args = [(i, self.state) for i in range(0, self.workers)]
         self.pool.map_async(AudioManager._worker, args)
 
-    def save_audio_file(self, name: str, f: FileStorage):
+    async def save_audio_file(self, name: str, f: FileStorage):
         """save an audio file to the manager's directory"""
-        f.save(os.path.join(self.state.audio_folder, name))
+        await f.save(os.path.join(self.state.audio_folder, name))
 
     def request_transcription(self, filename):
         """begin transcription of an audio file. this method will not transcribe an audio file that has already been processed"""
@@ -191,3 +192,4 @@ class AudioManager:
         for _ in range(0, self.workers):
             # put a stop message for every single worker
             self.state.job_queue.put(Message.stop())
+            

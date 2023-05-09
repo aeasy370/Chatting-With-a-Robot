@@ -1,11 +1,11 @@
 import os
 import logging
-from flask import Flask
-import multiprocessing as mp
+from quart import Quart
+import asyncio
 from dotenv import load_dotenv
 from manager import AudioManager
 import blueprints
-from robocomm import RoboComm
+from robocomm import handle_plc_connection
 
 
 load_dotenv()
@@ -34,13 +34,11 @@ def _setup_logging(debug=False):
     log.setLevel(level)
     log.addHandler(ch)
 
-    mplog = mp.get_logger()
-    mplog.setLevel(level)
-    mplog.addHandler(ch)
-
 
 def main():
-    app = Flask(__name__)
+    _setup_logging(debug=True)
+    
+    app = Quart(__name__)
     app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
     app.config["ALLOWED_EXTENSIONS"] = set(ALLOWED_EXTENSIONS.split(","))
     app.config["MODEL"] = MODEL
@@ -53,18 +51,29 @@ def main():
         app.config["WORKERS"],
         app.config["USE_CPU"],
     )
+    app.config["DIAGNOSTIC_QUEUE"] = asyncio.Queue()
+    app.config["RESPONSE_QUEUE"] = asyncio.Queue()
     app.config["PORT"] = PORT
     app.config["PLC_HOST"] = PLC_HOST
-    app.config["PLC_PORT"] = PLC_PORT
-    if PLC_HOST is not None:
-        app.config["CONNECTION"] = RoboComm(PLC_HOST, PLC_PORT, app.config["DEMO_MODE"])
-    else:
-        app.config["CONNECTION"] = None
+    app.config["PLC_PORT"] = int(PLC_PORT)
     app.register_blueprint(blueprints.main)
-
-    app.run(host="0.0.0.0", port=app.config["PORT"])
+    
+    @app.before_serving
+    async def startup():
+        if app.config["PLC_HOST"] is not None:
+            loop = asyncio.get_event_loop()
+            log.debug(f"creating server for PLC on port {PLC_PORT}")
+            app.config["CONNECTION"] = await asyncio.start_server(
+                lambda r, w: handle_plc_connection(app.config["DIAGNOSTIC_QUEUE"], app.config["RESPONSE_QUEUE"], r, w),
+                host="127.0.0.1",
+                port=app.config["PLC_PORT"]
+            )
+            # loop.create_task(app.config["CONNECTION"])
+        else:
+            app.config["CONNECTION"] = None
+    
+    app.run()
 
 
 if __name__ == "__main__":
-    _setup_logging(debug=True)
     main()
