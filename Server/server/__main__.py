@@ -65,14 +65,14 @@ def main():
             log.debug(f"creating server for PLC on port {PLC_PORT}")
             app.config["CONNECTION"] = await asyncio.start_server(
                 lambda r, w: handle_plc_connection(app.config["DIAGNOSTIC_QUEUE"], app.config["RESPONSE_QUEUE"], r, w),
-                host="127.0.0.1",
+                host="0.0.0.0",
                 port=app.config["PLC_PORT"]
             )
             # loop.create_task(app.config["CONNECTION"])
         else:
             app.config["CONNECTION"] = None
     
-    app.run()
+    app.run(host="0.0.0.0", port=app.config["PORT"])
 
 
 if __name__ == "__main__":

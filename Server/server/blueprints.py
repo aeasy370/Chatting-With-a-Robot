@@ -29,8 +29,8 @@ async def upload_audio():
             await mgr.save_audio_file(file.filename, file)
             mgr.request_transcription(file.filename)
             return ""
-        if request.method == "GET":
-            return ""
+    if request.method == "GET":
+        return ""
 
 
 @main.route("/<filename>", methods=["GET"])
