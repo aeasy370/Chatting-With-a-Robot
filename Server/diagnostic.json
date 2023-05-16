@@ -43,5 +43,14 @@
 		"push": {
 			"button": "PLC_MC_EstopPB_Active"
 		}
+	},
+	"elevator": {
+		"position": {
+			"1": "ELEVATOR_POSITION_1",
+			"2": "ELEVATOR_POSITION_2",
+			"3": "ELEVATOR_POSITION_3",
+			"4": "ELEVATOR_POSITION_4",
+			"5": "ELEVATOR_POSITION_5"
+		}
 	}
 }

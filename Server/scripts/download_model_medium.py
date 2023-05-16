@@ -1,3 +1,3 @@
 import whisper
 
-whisper.load_model("medium.en")
+whisper.load_model("small.en")

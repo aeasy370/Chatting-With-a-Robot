@@ -7,6 +7,6 @@ if __name__ == "__main__":
     raise SystemExit
   
   f = open(f"../audio/{argv[1]}", "rb")
-  r = requests.post("http://localhost:5000", files={"file": f})
+  r = requests.post("http://localhost:25623", files={"file": f})
   print(r)
   print(r.text)

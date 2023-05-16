@@ -17,7 +17,8 @@ def get_all_nouns(command: str) -> List[str]:
     returns a list of every noun in the command argument
     """
     x = nltk.pos_tag(get_words(command))
-    t = list(filter(lambda x: x[1] == "NN" or x[1] == "JJ", x))
+    digits = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]
+    t = list(filter(lambda x: x[1] == "NN" or x[1] == "JJ" or x[0] in digits, x))
     return t
 
 def get_keywords(keywords: List[str], command: str) -> List[str]:
